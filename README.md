@@ -21,8 +21,35 @@ Follow one of the following to set up the environment:
 ## Prepare data
 - `mkdir data`
 - `mkdir metadata`
--  Download data from [here](http://www.cis.jhu.edu/~ashah/PoseAction/data/). Extract the tar files with folder structure `data/$dataset/openpose_COCO_3/`
--  Download metadata from [here](http://www.cis.jhu.edu/~ashah/PoseAction/metadata.tar.gz). Extract the tar files to `data/metadata`
+
+```xml
+----data
+	----JHMDB
+		----openpose_COCO_3
+			---....npy
+			---....npy
+			---....npy
+	----HMDB51
+		----openpose_COCO_3
+			---....npy
+			---....npy
+			---....npy
+
+----metadata
+	----JHMDB
+		----.pkl
+		----.pkl
+		----.pkl
+	----HMDB51
+		----.pkl
+		----.pkl
+		----.pkl
+```
+
+
+
+- Download data from [here](http://www.cis.jhu.edu/~ashah/PoseAction/data/). Extract the tar files with folder structure `data/$dataset/openpose_COCO_3/`
+- Download metadata from [here](http://www.cis.jhu.edu/~ashah/PoseAction/metadata.tar.gz). Extract the tar files to `data/metadata`
 
 ## Training scripts
 - Example : `bash sample_scripts/hmdb.sh`
@@ -46,3 +73,62 @@ If you find this repository useful in your work, please cite us!
 }
 ```
 
+
+
+
+
+#### 本地到OSS [恒源云](https://www.gpushare.com/docs/data/upload/)
+
+进入链接，里面有OSS命令上传数据，点击OSS命令安装然后下载exe文件改名为oss.exe
+
+本地电脑Windows PowerShell，进入存放下载的oss.exe的目录
+
+```sh
+cd H:\
+.\oss.exe login
+Username:15072376330
+Password:lzy24324615695
+成功登录
+.\oss.exe cp dataset.zip oss://
+```
+
+#### OSS到实例
+
+启动实例`JupyterLab`，将OSS的数据传到服务器的 /hy-tmp中
+
+```sh
+oss login
+Username:150.....
+Password:lzy.....
+成功登录
+oss cp oss://dataset.zip /hy-tmp/
+cd /hy-tmp/
+```
+
+#### 解压
+
+```sh
+unzip dataset.zip
+```
+
+#### 原始PoseAction改动
+
+```java
+git clone https://github.com/anshulbshah/PoseAction.git
+```
+
+修改opt中的--name
+
+注释wandb，在train和trains中
+
+HMDB51的文件名没有-
+
+HMDB51训练脚本batchsize128太大，改为32
+
+
+
+#### 本地连接服务器终端
+
+在Pycharm的Tools中选择Start SSH session [参考](https://blog.csdn.net/qq_45100200/article/details/130355935?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522171983704416800188557392%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=171983704416800188557392&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-5-130355935-null-null.142^v100^pc_search_result_base6&utm_term=pycharm%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BB%88%E7%AB%AF&spm=1018.2226.3001.4187)
+
+#### 
