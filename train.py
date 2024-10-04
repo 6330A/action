@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from opts import parse_opts
 import json
 import pdb
-import wandb
+# import wandb
 from dataloaders import *
 from models import get_model
 import torch.nn as nn
@@ -33,10 +33,10 @@ if opts.tags != "":
     extra_args['tags'] = opts.tags
 if opts.name is not None:
     extra_args['name'] = opts.name
-wandb.init(project="PoseAction",**extra_args)
-wandb.run.save()
-opts.name = wandb.run.name
-wandb.config.update(opts)
+# wandb.init(project="PoseAction",**extra_args)
+# wandb.run.save()
+# opts.name = wandb.run.name
+# wandb.config.update(opts)
 
 set_random_seeds(opts.random_seed)
 collate_fn_train = None

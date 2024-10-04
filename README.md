@@ -125,6 +125,18 @@ HMDB51的文件名没有-
 
 HMDB51训练脚本batchsize128太大，改为32
 
+models.py中打印参数修改 print('Number of parameters requiring grad : {} '.format(count_parameters(enc)))
+
+
+
+#### 问题
+
+libgthread-2.0.so.0: cannot open shared object file: No such file or directory
+
+```bash
+sudo apt-get install libglib2.0-0
+```
+
 
 
 #### 本地连接服务器终端

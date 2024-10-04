@@ -34,7 +34,8 @@ def get_channel_weights(frames,channels=3):
     return channel_weights
 
 def encode_colors_for_potion(pose_heatmaps,channels=2):
-    channel_weights = np.zeros((channels,pose_heatmaps.shape[0]))
+    # 输入shape为(40, 19, 64, 86)是对原始热图cv2.resize后的数据
+    channel_weights = np.zeros((channels,pose_heatmaps.shape[0]))  # (2, 40)
     correction = 0
     T_by_C_min_1_b = pose_heatmaps.shape[0]/(channels-1)
     T_by_C_min_1 = np.floor(T_by_C_min_1_b).astype(np.int)
@@ -46,7 +47,11 @@ def encode_colors_for_potion(pose_heatmaps,channels=2):
         channel_weights[window+1,start_points[window] : start_points[window+1]+correction] = np.linspace(0,1,len_window+correction)
     row_sums = channel_weights.sum(axis=1)
     #channel_weights = channel_weights / row_sums[:, np.newaxis]
+
+    # 原始数据后三个维度压缩(40, 104576)
     reshaped_pose = pose_heatmaps.reshape(pose_heatmaps.shape[0],pose_heatmaps.shape[1]*pose_heatmaps.shape[2]*pose_heatmaps.shape[3])
+
+    # 举证运算，[channels, 40] [40, 10456] -> [channels, 19, 64, 86] 将40帧图像压缩到一个rgb中，映射关系与帧序列相关
     pose_representation = np.matmul(channel_weights,reshaped_pose).reshape(channels,pose_heatmaps.shape[1],pose_heatmaps.shape[2],pose_heatmaps.shape[3])
     return pose_representation,channel_weights
 
@@ -191,8 +196,11 @@ def final_extract_jhmdb(posetype,channels,split,static=False,skip_every=0):
         if image_loaded.shape[0] != 368:
             print(stop)
             import ipdb; ipdb.set_trace()  # breakpoint 2366f2a9 //
+        # 以一张热图为例，原始shape为(368, 9424), 以第二个维度拆分19份，高度不变，长度切割19份，之后调换维度顺序
+        # reshaped的shape为(19, 368, 496)
         reshaped = np.transpose(np.reshape(image_loaded,[368,18+1,-1]),[1,0,2])
         hm_h,hm_w = reshaped.shape[1],reshaped.shape[2]
+        # 这里保证高宽比例不变，短的一边设置为64
         if hm_h < hm_w:
             new_h = 64
             new_w = int(hm_w*64/hm_h)
@@ -210,6 +218,7 @@ def final_extract_jhmdb(posetype,channels,split,static=False,skip_every=0):
             reshaped = np.transpose(np.reshape(image_loaded,[368,18+1,-1]),[1,0,2])
             for idx_hno,h_no in enumerate(ordered_heatmaps):
                 potion_rep[frame_no_idx,idx_hno] = cv2.resize(reshaped[h_no],dsize=(new_w,new_h),interpolation=cv2.INTER_CUBIC)
+        # 对一个idx中的frames，获取potion_rep的shape为(len(frames), 19, 64, 86)表示有40帧图片，19个关键点信息，图片高宽(64, 86)
         trajectory,ch_wts = encode_colors_for_potion(potion_rep,channels)
         # print(time.time() - timer_start)
 

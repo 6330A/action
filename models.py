@@ -246,7 +246,8 @@ def get_model(opts,device,print_num_params = True,extract_features=False):
     else:
         raise NotImplementedError
     if print_num_params:
-        print('Number of parameters requiring grad : {0:.2f} Million'.format(count_parameters(enc)/1e6))
+        # print('Number of parameters requiring grad : {0:.2f} Million'.format(count_parameters(enc)/1e6))
+        print('Number of parameters requiring grad : {}'.format(count_parameters(enc)))
 
     return enc
 
