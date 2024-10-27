@@ -53,9 +53,8 @@ Follow one of the following to set up the environment:
 
 ## Training scripts
 - Example : `bash sample_scripts/hmdb.sh`
-
 - Example : `bash sample_scripts/jhmdb.sh`
-
+- Example : `bash sample_scripts/le2i.sh`
 - Raw heatmaps
 
 We also provide raw heatmaps [here](https://1drv.ms/u/s!AlAjgCeVY_IrgY40FMWKAsiO5-Opmw?e=N8e4A6). OpenPose was used to extract these. Please take a look at function `final_extract_hmdb` in `utils.py` for an example function to extract pose data. 

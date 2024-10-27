@@ -3,7 +3,7 @@ import torch
 from sklearn.metrics import average_precision_score
 
 def accuracy(output, target, topk=(1,)):
-    """Computes the precision@k for the specified values of k"""
+    """Computes the precision@k for the specified values of k，这里给定参数topk=(1,5)输出的结果就有列表根据下标[0],[1]得到top1和top5精度"""
     if target.dim() == 3:
         target = target.max(dim=1)[0]
     maxk = max(topk)

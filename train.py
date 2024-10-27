@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from opts import parse_opts
 import json
 import pdb
-# import wandb
 from dataloaders import *
 from models import get_model
 import torch.nn as nn
@@ -33,38 +32,59 @@ if opts.tags != "":
     extra_args['tags'] = opts.tags
 if opts.name is not None:
     extra_args['name'] = opts.name
-# wandb.init(project="PoseAction",**extra_args)
-# wandb.run.save()
-# opts.name = wandb.run.name
-# wandb.config.update(opts)
+
 
 set_random_seeds(opts.random_seed)
 collate_fn_train = None
 collate_fn_test = None
 
-def collate_ava(batch):
-    output_batch = {}
-    output_batch['label'] = [torch.Tensor(b['label']) for b in batch]
-    output_batch['label'] = torch.cat(output_batch['label'])
-    output_batch['num_boxes'] = [torch.Tensor(len(b['label'])) for b in batch]
-    output_batch['video_name_actual'] = [b['video_name_actual'] for b in batch]
-    output_batch['motion_rep'] = [torch.Tensor(b['motion_rep']) for b in batch]
-    output_batch['motion_rep'] = torch.cat(output_batch['motion_rep'])
-    if 'motion_rep_augmented' in batch[0].keys():
-        output_batch['motion_rep_augmented'] = [torch.Tensor(b['motion_rep_augmented']) for b in batch]
-        output_batch['motion_rep_augmented'] = torch.cat(output_batch['motion_rep_augmented'])
-    output_batch['slowfast_logit'] = [torch.Tensor(b['slowfast_logit']) for b in batch]
-    output_batch['slowfast_logit'] = torch.cat(output_batch['slowfast_logit'])
-    output_batch['key_name'] = [b['key_name'] for b in batch]
+def split_dataset(samples_size, ratio=[7, 1, 2]):
+    samples = list(range(samples_size))
+    random.shuffle(samples)  # 随机打乱样本顺序
 
-    if 'metadata' in batch[0]:
-        data = [b['metadata'] for b in batch]
-        output_batch['metadata'] = torch.Tensor(list(itertools.chain(*data))).view(-1, 2)
-        output_batch['ori_boxes'] = [torch.cat([torch.zeros((bb['ori_boxes'].shape[0],1)),torch.Tensor(bb['ori_boxes'])],1) for i,bb in enumerate(batch)]
-        output_batch['ori_boxes'] = torch.cat(output_batch['ori_boxes'])
-    return output_batch    
+    # 计算每段的样本数
+    total_ratio = sum(ratio)
+    split_points = [int(samples_size * sum(ratio[:i + 1]) / total_ratio) for i in range(len(ratio))]
 
-if(opts.dataset == 'jhmdb'):
+    # 按照比例分割样本
+    split_samples = [samples[split_points[i - 1] if i > 0 else 0: split_points[i]] for i in range(len(ratio))]
+
+    return split_samples
+
+
+
+if opts.dataset == 'le2i':
+    samples_size = 1808
+    train_samples, val_samples, test_samples = split_dataset(samples_size, ratio=[7, 3, 0])
+    trainDataset = Le2i(sample_list=train_samples, pose_encoding_path='data/Fallnpy', label_path='data/le2i_labels.npy', opts=opts, transform_type='train')
+    valDataset = Le2i(sample_list=val_samples, pose_encoding_path='data/Fallnpy/', label_path='data/le2i_labels.npy', opts=opts, transform_type='val')
+    valDataset_whole = None
+    opts.number_of_classes = 2
+
+    ########################统计一下样本
+#     count0, count1 = 0, 0
+#     print(train_samples[:4])  # [714, 1282, 1423, 1735]
+
+#     print('train_num:', len(train_samples))
+#     print('val_num:', len(val_samples))
+
+#     for i in range(len(train_samples)):
+#         if trainDataset[i]['label'] == 1:
+#             count1 += 1
+#         else:
+#             count0 += 1
+#     print('train ---->','fall:', count1, 'notfall:', count0)
+
+#     count0, count1 = 0, 0
+#     for i in range(len(val_samples)):
+#         if valDataset[i]['label'] == 1:
+#             count1 += 1
+#         else:
+#             count0 += 1
+#     print('val   ---->','fall:', count1, 'notfall:', count0)
+########################统计一下样本
+
+elif(opts.dataset == 'jhmdb'):
     path = 'metadata/JHMDB/'
     trainDataset = JHMDB(data_loc=path,pose_encoding_path='data/JHMDB/',file_name='jhmdb_train'+opts.train_split,opts=opts,transform_type='train')
     valDataset = JHMDB(data_loc=path,pose_encoding_path='data/JHMDB/',file_name='jhmdb_test'+opts.train_split,opts=opts,transform_type='val')
@@ -76,12 +96,6 @@ elif(opts.dataset == 'hmdb'):
     valDataset = HMDB(data_loc=path,pose_encoding_path='data/HMDB51/',file_name='hmdb_test'+opts.train_split,opts=opts,transform_type='val')
     valDataset_whole = HMDB(data_loc=path,pose_encoding_path='data/HMDB51/',file_name='hmdb_test'+opts.train_split,opts=opts,transform_type='val',get_whole_video=True)
     opts.number_of_classes = 51
-elif(opts.dataset == 'charades'):
-    path = 'metadata/Charades/'
-    trainDataset = Charades(data_loc=path,pose_encoding_path='data/Charades/',file_name='charades_train',opts=opts,transform_type='train')
-    valDataset = Charades(data_loc=path,pose_encoding_path='data/Charades/',file_name='charades_test',opts=opts,transform_type='val')
-    valDataset_whole = Charades(data_loc=path,pose_encoding_path='data/Charades/',file_name='charades_test',opts=opts,transform_type='val',get_whole_video=True)
-    opts.number_of_classes = 157
 else:
     raise NotImplementedError
     

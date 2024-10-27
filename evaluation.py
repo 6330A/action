@@ -17,10 +17,9 @@ def evaluate_model_ch_wts_contrastive(datatype,ep,opts,model,loader,device,crite
         for i,sample in tqdm(enumerate(loader),total=len(loader)):
             motion_rep = sample['motion_rep'].type(torch.float).to(device)                
             input_to_net = motion_rep
-            if opts.dataset in ['jhmdb','hmdb']:
+            if opts.dataset in ['jhmdb','hmdb','le2i']:
                 yt = sample['label'].type(torch.long).to(device)
-            elif opts.dataset == 'charades':
-                yt = sample['label'].type(torch.float).to(device)
+
 
             op,state,_ = model(input_to_net,sample)
             class_loss = criterion(op.squeeze(0), yt)
@@ -58,7 +57,7 @@ def evaluate_model_ch_wts_contrastive(datatype,ep,opts,model,loader,device,crite
     }
 
 
-    if opts.dataset in ['jhmdb','hmdb']:
+    if opts.dataset in ['jhmdb','hmdb','le2i']:
         print('{} Epoch {} : {:05.3f}%'.format(datatype,ep,metrics_to_return['accuracy']))
         metrics_to_return['map'] = 0.0
         mean_class_wise_accuracy = 0
@@ -68,11 +67,5 @@ def evaluate_model_ch_wts_contrastive(datatype,ep,opts,model,loader,device,crite
                 mean_class_wise_accuracy += (class_wise_correct[key]*100/class_wise_count[key])
         mean_class_wise_accuracy/=num_classes
         metrics_to_return['m_class_wise_accuracy'] = mean_class_wise_accuracy
-
-    elif opts.dataset == 'charades':
-        map_value,_,_ = metrics.charades_map(logit_list.cpu().numpy(),true_labels.cpu().numpy())
-        print('{} Epoch {} : Accuracy {:05.3f}%, mAP : {:05.3f}%'.format(datatype,ep,metrics_to_return['accuracy'],map_value*100))
-        metrics_to_return['map'] = map_value*100
-        metrics_to_return['m_class_wise_accuracy'] = 0.0
 
     return metrics_to_return

@@ -1,6 +1,5 @@
 from evaluation import *
 from tqdm import tqdm
-# import wandb
 import torch
 from termcolor import cprint
 from utils import get_lr
@@ -17,10 +16,8 @@ def default_trainer_ch_wts_contrastive(opts,model,valLoader,trainLoader,device,o
     val_map = []
     epoch_start = -1
 
-    if opts.dataset in ['jhmdb','hmdb']:
+    if opts.dataset in ['jhmdb','hmdb','le2i']:
         criterion = nn.CrossEntropyLoss()       
-    elif opts.dataset in ['charades']:
-        criterion = nn.BCEWithLogitsLoss()
 
     joint_names = valLoader.dataset.joint_names()
     if opts.use_background == 'False':
@@ -42,29 +39,16 @@ def default_trainer_ch_wts_contrastive(opts,model,valLoader,trainLoader,device,o
                     if epoch > 0:   
                         scheduler.step(vl_loss)
 
-                if opts.dataset == 'charades':
-                    val_accuracy.append(vl_map)
-                else:
-                    val_accuracy.append(vl_acc)
+
+                val_accuracy.append(vl_acc)
 
                 val_loss.append(vl_loss)
                 val_map.append(vl_map)
                 get_current_lr = get_lr(optimizer)
             
-                # wandb_dict = {
-                #     "val Accuracy": vl_acc,
-                #     "val Loss": vl_loss,
-                #     "val mAP":vl_map,
-                #     "Max val mAP":max(val_map),
-                #     "Max val Acc" : max(val_accuracy),
-                #     "Learning Rate":get_current_lr,
-                #     "global_step" :epoch,
-                #     'm_classwise_running':val_metrics['m_class_wise_accuracy'],
-                # }
+
 
                 is_best = save_all_information(opts.dataset + '/' + opts.name,epoch,train_accuracy,val_accuracy,train_loss,val_loss,model)
-            # else:
-            #     wandb_dict = {}
 
             model.train()
 
@@ -74,10 +58,8 @@ def default_trainer_ch_wts_contrastive(opts,model,valLoader,trainLoader,device,o
                 motion_rep = sample_train['motion_rep'].type(torch.float).to(device)
                 motion_rep2 = sample_train['motion_rep_augmented'].type(torch.float).to(device)
                 input_to_net = torch.cat([motion_rep,motion_rep2],0)
-                if opts.dataset in ['jhmdb','hmdb']:
+                if opts.dataset in ['jhmdb','hmdb','le2i']:
                     y = sample_train['label'].type(torch.long).to(device)
-                elif opts.dataset == 'charades':
-                    y = sample_train['label'].type(torch.float).to(device)
          
                 optimizer.zero_grad()
                 op, ch_wts, contrastive_features  = model(input_to_net, sample_train)
@@ -99,11 +81,6 @@ def default_trainer_ch_wts_contrastive(opts,model,valLoader,trainLoader,device,o
 
                 loss = class_loss + opts.loss_weights_contrastive*l1_scale*contrastive_loss
             
-                # if i%5:
-                #     wandb_dict['contrastive_loss_train'] = contrastive_loss
-                #     wandb_dict['train_loss'] = loss
-                #     wandb.log(wandb_dict,step=len(trainLoader)*epoch + i)
-                #     wandb_dict = {}
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
@@ -117,24 +94,10 @@ def default_trainer_ch_wts_contrastive(opts,model,valLoader,trainLoader,device,o
             
     val_metrics = evaluate_model_ch_wts_contrastive('val', epoch, opts,model,valLoader,device,criterion)
     vl_loss,vl_acc,vl_map = val_metrics['loss'],val_metrics['accuracy'],val_metrics['map']
-    if opts.dataset == 'charades':
-        val_accuracy.append(vl_map)
-    else:
-        val_accuracy.append(vl_acc)
+    val_accuracy.append(vl_acc)
     val_loss.append(vl_loss)
     val_map.append(vl_map)
     is_best = save_all_information(opts.dataset + '/' + opts.name,epoch,train_accuracy,val_accuracy,train_loss,val_loss,model)
     print('Max val accuracy is {}'.format(max(val_accuracy)))
     print('Max val mAP is {}'.format(max(val_map)))
     get_current_lr = get_lr(optimizer)
-    # wandb_dict = {
-    #     "val Accuracy": vl_acc,
-    #     "val Loss": vl_loss,
-    #     "val mAP":vl_map,
-    #     "Max val mAP":max(val_map),
-    #     "Max val Acc" : max(val_accuracy),
-    #     "Learning Rate":get_current_lr,
-    #     "global_step" :epoch,
-    #     'm_classwise_running':val_metrics['m_class_wise_accuracy'],
-    # }
-    # wandb.log(wandb_dict)
