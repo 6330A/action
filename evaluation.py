@@ -49,6 +49,31 @@ def evaluate_model_ch_wts_contrastive(datatype,ep,opts,model,loader,device,crite
 
     logit_list = torch.stack(logit_list)
     true_labels = torch.stack(true_labels)
+
+    
+    _, max_indices = torch.max(logit_list, dim=1)
+    # 初始化计数
+    TP = ((max_indices == 1) & (true_labels == 1)).sum().item()  # 真正类
+    FP = ((max_indices == 1) & (true_labels == 0)).sum().item()  # 假正类
+    TN = ((max_indices == 0) & (true_labels == 0)).sum().item()  # 真负类
+    FN = ((max_indices == 0) & (true_labels == 1)).sum().item()  # 假负类
+
+    # 输出结果
+    print(f"TP: {TP}")
+    print(f"FP: {FP}")
+    print(f"TN: {TN}")
+    print(f"FN: {FN}")
+    Accuracy = (TP + TN) / (TP + TN + FP + FN) if (TP + TN + FP + FN) != 0 else 0
+    Precision = TP / (TP + FP) if (TP + FP) != 0 else 0
+    Recall = TP / (TP + FN) if (TP + FN) != 0 else 0
+    F1 = 2 * Precision * Recall / (Precision + Recall) if (Precision + Recall) != 0 else 0
+    # 计算并格式化输出
+    print(f"Accuracy : {Accuracy:.3f}")
+    print(f"Precision: {Precision:.3f}")
+    print(f"Recall   : {Recall:.3f}")
+    print(f"F1 Score : {F1:.3f}")
+
+    print("*" * 80)
     
     #breakpoint()
     metrics_to_return = {

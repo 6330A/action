@@ -7,7 +7,7 @@ python train.py --batch_size 16 \
       --loss_weights_contrastive 0.05 --lr_patience 5 \
       --max_motion 7 --max_motion_groupwise 4 \
       --model JMRN \
-      --paa True --paa_type global_and_groupwise --n_epochs 100 \
+      --paa True --paa_type global_and_groupwise --n_epochs 10 \
       --n_workers 8 \
       --pose_type openpose_coco_v2 \
       --save_every 5 --temperature 0.3 --train_split 1 \

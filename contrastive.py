@@ -7,6 +7,7 @@ import torch.nn as nn
 class SupConLoss(nn.Module):
     """Supervised Contrastive Learning: https://arxiv.org/pdf/2004.11362.pdf.
     It also supports the unsupervised contrastive loss in SimCLR"""
+
     def __init__(self, temperature=0.07, contrast_mode='all',
                  base_temperature=0.07):
         super(SupConLoss, self).__init__()
@@ -39,25 +40,23 @@ class SupConLoss(nn.Module):
         # features --> J x B x views x 128
 
         batch_size = features.shape[1]
-        if not contrastive_loss_type in ['all_charades_atleast_one','all_charades_weighted']:
+        if not contrastive_loss_type in ['all_charades_atleast_one', 'all_charades_weighted']:
             labels = labels.contiguous().view(-1, 1)
         if labels.shape[0] != batch_size and contrastive_loss_type in ['all']:
-            raise ValueError('Num of labels does not match num of features')            
+            raise ValueError('Num of labels does not match num of features')
         if contrastive_loss_type == 'only_aug':
             mask = torch.eye(batch_size, dtype=torch.float32).to(device)
         elif contrastive_loss_type == 'all':
             mask = torch.eq(labels, labels.T).float().to(device)
         elif contrastive_loss_type == 'all_charades_atleast_one':
-            dot_product = labels@labels.T
+            dot_product = labels @ labels.T
             mask = (dot_product > 0.0).float().to(device)
         elif contrastive_loss_type == 'all_charades_weighted':
-            dot_product = labels@labels.T   
-            dir0_sum = torch.sum(labels,1)
-            max_val = torch.max(dir0_sum.unsqueeze(0).repeat(batch_size,1),dir0_sum.unsqueeze(1).repeat(1,batch_size))
-            mask = dot_product/(max_val + 1E-3)
+            dot_product = labels @ labels.T
+            dir0_sum = torch.sum(labels, 1)
+            max_val = torch.max(dir0_sum.unsqueeze(0).repeat(batch_size, 1), dir0_sum.unsqueeze(1).repeat(1, batch_size))
+            mask = dot_product / (max_val + 1E-3)
             # import pdb; pdb.set_trace()
-
-
 
         # features : J x B x 2 x D
         contrast_count = features.shape[2]
@@ -74,8 +73,12 @@ class SupConLoss(nn.Module):
         # compute logits
 
         anchor_dot_contrast = torch.div(
-            torch.bmm(anchor_feature, contrast_feature.permute(0,2,1)),
+            torch.bmm(anchor_feature, contrast_feature.permute(0, 2, 1)),
             self.temperature)
+
+        # 获取每个 8x8 矩阵的对角线元素，然后减去，也就是将对角线置为0
+        # diag_elements = torch.diagonal(anchor_dot_contrast, dim1=-2, dim2=-1)
+        # anchor_dot_contrast = anchor_dot_contrast - torch.diag_embed(diag_elements)
 
         # for numerical stability
         logits_max, _ = torch.max(anchor_dot_contrast, dim=2, keepdim=True)
@@ -100,8 +103,8 @@ class SupConLoss(nn.Module):
         mean_log_prob_pos = (mask.unsqueeze(0) * log_prob).sum(1) / (mask.unsqueeze(0).sum(2) + 1E-8)
 
         # loss
-        loss = -1.0*mean_log_prob_pos
+        loss = -1.0 * mean_log_prob_pos
         # loss = loss.view(anchor_count, batch_size).mean()
         # if debug:
         #     import pdb; pdb.set_trace()
-        return loss.permute(1,0), mask
+        return loss.permute(1, 0), mask
