@@ -116,7 +116,10 @@ experiment_name = opts.name
 
 trainLoader = DataLoader(trainDataset, batch_size=opts.batch_size, shuffle=True, num_workers=opts.n_workers, drop_last=False, pin_memory=True, collate_fn=collate_fn_train)
 valLoader = DataLoader(valDataset, batch_size=opts.batch_size, shuffle=False, num_workers=opts.n_workers, pin_memory=True, collate_fn=collate_fn_test)
-testLoader = DataLoader(testDataset, batch_size=opts.batch_size, shuffle=False, num_workers=opts.n_workers, pin_memory=True, collate_fn=collate_fn_test)
+if opts.dataset == 'le2i':
+    testLoader = DataLoader(testDataset, batch_size=opts.batch_size, shuffle=False, num_workers=opts.n_workers, pin_memory=True, collate_fn=collate_fn_test)
+else:
+    testLoader = None
 valLoader_whole = None
 if valDataset_whole is not None:
     valLoader_whole = DataLoader(valDataset_whole, batch_size=1, shuffle=False, num_workers=0)

@@ -85,8 +85,8 @@ If you find this repository useful in your work, please cite us!
 ```sh
 cd H:\
 .\oss.exe login
-Username:15072376330
-Password:lzy24324615695
+Username:150---
+Password:lzy2---
 成功登录
 .\oss.exe cp dataset.zip oss://
 ```
