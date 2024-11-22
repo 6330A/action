@@ -38,7 +38,7 @@ class Matrix(object):
     def plot(self):
         plt.imshow(self.matrix, cmap=plt.cm.Blues)
 
-        plt.xticks(range(self.class_nums), self.labels, rotation=45)
+        plt.xticks(range(self.class_nums), self.labels, rotation=90)
         plt.yticks(range(self.class_nums), self.labels)
         plt.colorbar()
         plt.xlabel('True Labels')

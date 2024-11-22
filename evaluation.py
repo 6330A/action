@@ -6,13 +6,17 @@ from matrix import Matrix
 def evaluate_model_ch_wts_contrastive(datatype, ep, opts, model, loader, device, criterion, return_features=False):
     model.eval()
     class_nums = None
+    labels = None
     if opts.dataset == 'hmdb':
         class_nums = 51
+        labels = ['brush_hair', 'cartwheel', 'catch', 'chew', 'clap', 'climb', 'climb_stairs', 'dive', 'draw_sword', 'dribble', 'drink', 'eat', 'fall_floor', 'fencing', 'flic_flac', 'golf', 'handstand', 'hit', 'hug', 'jump', 'kick', 'kick_ball', 'kiss', 'laugh', 'pick', 'pour', 'pullup', 'punch', 'push', 'pushup', 'ride_bike', 'ride_horse', 'run', 'shake_hands', 'shoot_ball', 'shoot_bow', 'shoot_gun', 'sit', 'situp', 'smile', 'smoke', 'somersault', 'stand', 'swing_baseball', 'sword', 'sword_exercise', 'talk', 'throw', 'turn', 'walk', 'wave']
+
     elif opts.dataset == 'jhmdb':
         class_nums = 21
+        labels=['brush_hair', 'catch', 'clap', 'climb_stairs', 'golf', 'jump', 'kick_ball', 'pick', 'pour', 'pullup', 'push', 'run', 'shoot_ball', 'shoot_bow', 'shoot_gun', 'sit', 'stand', 'swing_baseball', 'throw', 'walk', 'wave']
     elif opts.dataset == 'le2i':
         class_nums = 2
-    labels=[chr(i + ord('A')) for i in range(class_nums)]
+        labels=['not fall', 'fall']
 
     matrix = Matrix(class_nums=class_nums, labels=labels)
 
@@ -61,6 +65,8 @@ def evaluate_model_ch_wts_contrastive(datatype, ep, opts, model, loader, device,
     print('{} Epoch {} : {:05.3f}%'.format(datatype, ep, metrics_to_return['accuracy']))
 
     if datatype == 'test':
+        for idx, k in enumerate(top_k):
+            print(f"Top-{k} Accuracy: {acc[idx].item():.2f}%")
         if opts.dataset == 'le2i':
             matrix.summary()
         matrix.plot()

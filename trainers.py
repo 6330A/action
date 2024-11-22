@@ -98,9 +98,17 @@ def default_trainer_ch_wts_contrastive(opts, model, valLoader, trainLoader, devi
     is_best = save_all_information(opts.dataset + '/' + opts.name, epoch, train_accuracy, val_accuracy, train_loss, val_loss, model)
     print('Max val accuracy is {}'.format(max(val_accuracy)))
     print('Max val mAP is {}'.format(max(val_map)))
+
+    print('Test .....','#'*50)
+    model.load_state_dict(torch.load(opts.dataset + '/' + opts.name + '/' + '/model_best.t7'))  # 加载最优模型进行测试
+    
     if opts.dataset == 'le2i':
-        print('#' * 50)
-        print()
         test_metrics = evaluate_model_ch_wts_contrastive('test', epoch, opts, model, testLoader, device, criterion)
         test_acc = test_metrics['accuracy']
         print(f'Test accuracy is {test_acc}')
+    else:
+
+        test_metrics = evaluate_model_ch_wts_contrastive('test', epoch, opts, model, valLoader, device, criterion)
+        test_acc = test_metrics['accuracy']
+        print(f'Test accuracy is {test_acc}')
+
